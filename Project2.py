@@ -11,8 +11,9 @@ def main():
             for char in Rules:
                 if char not in check_list and char.islower():
                     check_list.append(char)
-            if Rules[0] == Rules[-1] and Rules[0] == "0":  # this if statement takes care of step 1
-                V.append(Variables[0])  # of removing empty rules
+            # this if statement takes care of step 1 of removing empty rules
+            if Rules[0] == Rules[-1] and Rules[0] == "0":
+                V.append(Variables[0])
                 continue
             cfg_dict[Variables[0]] = Rules
 
@@ -48,15 +49,36 @@ def elim_e_rules(cfg, V):
             cfg[variable] = new_rule
             V.append(variable)
 
+    for variable, rule in cfg.items():
+        list_of_rules = rule.split("|")
+        for item in list_of_rules:
+            flag = False
+            for character in item:
+                if character in V:
+                    flag = True
+                    continue
+                else:
+                    flag = False
+                    break
+            if flag:
+                V.append(variable)
+
     # this for loop creates all possible combinations of the rules using the symbols in V
     # could be an easier/more efficient way to do this?
     for variable, rule in cfg.items():
         list_of_rules = rule.split("|")
         for item in list_of_rules:
-            for letter in V:
-                if letter in item:
-                    new_rule = item.replace(letter, "")
-                    if new_rule != "" and new_rule not in list_of_rules:
+            for character in item:
+                if character in V:
+                    if item[0] == item[-1] and len(item) > 1:
+                        left_strip = item.lstrip(character)
+                        right_strip = item.rstrip(character)
+                        if left_strip not in list_of_rules:
+                            list_of_rules.append(left_strip)
+                        if right_strip not in list_of_rules:
+                            list_of_rules.append(right_strip)
+                    new_rule = item.replace(character, "")
+                    if new_rule != "" and new_rule not in list_of_rules and new_rule != variable:
                         list_of_rules.append(new_rule)
         cfg[variable] = list_of_rules
 
@@ -69,14 +91,14 @@ def elim_e_rules(cfg, V):
                 continue
             print(item + "|", end="")
 
-
     return cfg
+
 
 def elim_useless_rules(cfg, check_list):
     x = []
     check = False
     to_be_removed = []
-
+    #checks if all current letters in check_list are in a rule and adds it to x
     for variable, rules_list in cfg.items():
         for rule in rules_list:
             for character in rule:
@@ -89,15 +111,22 @@ def elim_useless_rules(cfg, check_list):
                 check_list.append(variable)
                 break
 
-    print(x)
-    print(check_list)
 
+    #if a non-terminal is not in x then add it to to_be_removed
     for variable in cfg.keys():
         if variable not in x:
             to_be_removed.append(variable)
 
-    for item in to_be_removed:
-        cfg.pop(item)
+    #if there are items that need to be removed then remove them from the dictionary
+    if to_be_removed:
+        for item in to_be_removed:
+            cfg.pop(item)
+            for list_of_rules in cfg.values():
+                for rule in list_of_rules:
+                    if item in rule:
+                        list_of_rules.remove(rule)
+
+
 
     print("After further removing useless rules:")
     for variable, rule in cfg.items():
@@ -107,10 +136,6 @@ def elim_useless_rules(cfg, check_list):
                 print(item)
                 continue
             print(item + "|", end="")
-
-
-
-
 
 
 main()
