@@ -2,18 +2,21 @@ def read_file():
     cfg_dict = {}
     V = []
     check_list = []
-    with open("Example.txt", "r") as file:
-        for line in file:
-            Variables = line.strip().split("-")
-            Rules = Variables[1]
-            for char in Rules:
-                if char not in check_list and char.islower():
-                    check_list.append(char)
-            # this if statement takes care of step 1 of removing empty rules
-            if Rules[0] == Rules[-1] and Rules[0] == "0":
-                V.append(Variables[0])
-                continue
-            cfg_dict[Variables[0]] = Rules
+    try:
+        with open("Test_3.txt", "r") as file:
+            for line in file:
+                Variables = line.strip().split("-")
+                Rules = Variables[1]
+                for char in Rules:
+                    if char not in check_list and char.islower():
+                        check_list.append(char)
+                # this if statement takes care of step 1 of removing empty rules
+                if Rules[0] == Rules[-1] and Rules[0] == "0":
+                    V.append(Variables[0])
+                    continue
+                cfg_dict[Variables[0]] = Rules
+    finally:
+        file.close()
 
     print("CFG after removing  -> empty")
     for variable, rule in cfg_dict.items():
@@ -30,7 +33,9 @@ def read_file():
     print_cfg(cfg_dict)
 
 
+#method used to eliminate empty rules
 def elim_e_rule(cfg, V):
+    #eliminates all 0 from the cfg and adds that variable with 0 to V
     for variable, rule in cfg.items():
         if "|0" in rule:
             new_rule = rule.replace("|0", "")
@@ -41,6 +46,7 @@ def elim_e_rule(cfg, V):
             cfg[variable] = new_rule
             V.append(variable)
 
+    #checks if all the characters in a rule are in V, if so add variable to V
     for variable, rule in cfg.items():
         list_of_rules = rule.split("|")
         for item in list_of_rules:
@@ -55,6 +61,7 @@ def elim_e_rule(cfg, V):
             if flag:
                 V.append(variable)
 
+    #recursive solution for finding all possible combinations using the items in V
     for nonterminal, rule in cfg.items():
         list_of_rules = rule.split("|")
         new_rules = []
@@ -73,6 +80,7 @@ def elim_e_rule(cfg, V):
     return cfg
 
 
+#recursive method used to find all possible combinations for a given rule
 def cfg_pSet(rule, V, i):
     if len(V) == i:
         return rule
@@ -92,6 +100,7 @@ def cfg_pSet(rule, V, i):
         return cfg_pSet(rule, V, i+1)
 
 
+#method used to eliminate all useless rules
 def elim_useless_rules(cfg, check_list):
     x = []
     check = False
@@ -129,6 +138,7 @@ def elim_useless_rules(cfg, check_list):
     return cfg
 
 
+#method used to print the cfg
 def print_cfg(cfg):
     for nonterminal, rules in cfg.items():
         print(nonterminal + "->", end="")
